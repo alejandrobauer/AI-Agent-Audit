@@ -115,24 +115,24 @@ function groupIssues(issues) {
   return order.map(function(k) { return map[k]; });
 }
 
-function collectIssues(rootNode, visibleOnly) {
+async function collectIssues(rootNode, visibleOnly) {
   var raw = [];
   var nodeCount = 0;
 
-  function traverse(node) {
+  async function traverse(node) {
     if (visibleOnly && node.visible === false) return;
     nodeCount++;
     auditNaming(node, raw);
-    auditComponent(node, raw);
+    await auditComponent(node, raw);
     auditTokens(node, raw);
     auditStyles(node, raw);
     auditStructure(node, raw);
     if ('children' in node) {
-      for (var i = 0; i < node.children.length; i++) traverse(node.children[i]);
+      for (var i = 0; i < node.children.length; i++) await traverse(node.children[i]);
     }
   }
 
-  traverse(rootNode);
+  await traverse(rootNode);
   auditVariableCollections(raw);
   return { raw: raw, nodeCount: nodeCount };
 }
@@ -181,11 +181,11 @@ function auditNaming(node, issues) {
 
 // ── COMPONENTS ───────────────────────────────────────────────────────────────
 
-function auditComponent(node, issues) {
+async function auditComponent(node, issues) {
   const path = getShortPath(node);
 
   if (node.type === 'INSTANCE') {
-    const comp = node.mainComponent;
+    const comp = await node.getMainComponentAsync();
 
     if (!comp) {
       issues.push({
@@ -1130,7 +1130,7 @@ async function runAudit(theme) {
   await loadFonts();
 
   console.log('[AI Audit] Running audit on', target.type, '(visibleOnly=' + visibleOnly + ')…');
-  var collected = collectIssues(target, visibleOnly);
+  var collected = await collectIssues(target, visibleOnly);
   var raw = collected.raw;
   var efficiency = computeTokenEfficiency(raw);
   var issues = groupIssues(raw);
