@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=250" />
+<title>AI Agent Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&family=DM+Sans:wght@400;600;900&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 250px;
+  background: rgb(251,247,243);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ─── Character area ─── */
+.character {
+  width: 250px;
+  height: 250px;
+  position: relative;
+  overflow: hidden;
+}
+
+.robot-img {
+  width: 250px;
+  height: 250px;
+  display: block;
+}
+
+@keyframes robot-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-9px); }
+}
+@keyframes shadow-scale {
+  0%, 100% { transform: scaleX(1);    opacity: 1; }
+  50%       { transform: scaleX(.68); opacity: .65; }
+}
+@keyframes eye-blink {
+  0%, 88%, 100% { transform: scaleY(1); }
+  93%           { transform: scaleY(0.06); }
+}
+#robot-body-group {
+  animation: robot-float 3.2s ease-in-out infinite;
+  transform-origin: 125px 210px;
+}
+#robot-shadow {
+  animation: shadow-scale 3.2s ease-in-out infinite;
+  transform-origin: 119px 203px;
+}
+#eye-left {
+  animation: eye-blink 4.8s ease-in-out infinite;
+  transform-origin: 111.259px 78.058px;
+}
+#eye-right {
+  animation: eye-blink 4.8s ease-in-out infinite;
+  transform-origin: 146.881px 78.058px;
+}
+
+/* ─── Options ─── */
+.options {
+  padding: 0px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group-label {
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: .04em;
+  color: rgb(154,130,102);
+  padding: 0 0 0 20px;
+  text-transform: uppercase;
+}
+
+.pill {
+  width: 218px;
+  height: 45px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 100%;
+  transition: background .22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              color       .22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow  .22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform   .22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter      .14s ease;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes pill-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.07); }
+  65%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+.pill-sel {
+  background: #40BEF8;
+  color: white;
+  box-shadow: inset 0 4px 0 0 rgba(0,100,170,.28);
+}
+
+.pill-unsel {
+  background: white;
+  color: rgb(18,174,246);
+  box-shadow: 0 4px 0 0 #E7E0D7;
+}
+.pill:hover.pill-unsel  { filter: brightness(0.96); }
+.pill:hover.pill-sel    { filter: brightness(1.06); }
+.pill:active            { transform: scale(.91) translateY(3px) !important; transition: transform .08s ease !important; }
+
+.pill.popping { animation: pill-pop .32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* ─── Audit button ─── */
+.audit-btn {
+  width: 218px;
+  height: 45px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  background: rgb(250,98,37);
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: .01em;
+  box-shadow: 0 6px 4px 0 rgba(176,72,30,.14);
+  position: relative;
+  overflow: hidden;
+  transition: transform   .28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow  .28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter      .14s ease;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.audit-btn .refl {
+  position: absolute;
+  left: 10px; top: 8px;
+  width: 20px; height: 16px;
+  pointer-events: none;
+}
+.audit-btn:hover  {
+  filter: brightness(1.08);
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 14px 24px rgba(176,72,30,.32);
+}
+.audit-btn:active {
+  transform: scale(.88) translateY(4px) !important;
+  box-shadow: 0 2px 4px rgba(176,72,30,.18) !important;
+  transition: transform .07s ease !important, box-shadow .07s ease !important;
+}
+
+.audit-btn.running { background: rgb(200,78,20); pointer-events: none; }
+.audit-btn.running .btn-label { opacity: 0; }
+.audit-btn .spinner { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; }
+.audit-btn.running .spinner { display: flex; }
+.spinner-ring {
+  width: 20px; height: 20px;
+  border: 2.5px solid rgba(255,255,255,.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+
+/* ─── Hint card ─── */
+.hint-card {
+  background: #F0E3D4;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgb(120, 90, 60);
+  text-align: center;
+  line-height: 1.45;
+}
+</style>
+</head>
+<body>
+
+<!-- ─── Character ─── -->
+<div class="character">
+  <svg class="robot-img" width="250" height="250" viewBox="0 0 250 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse id="robot-shadow" cx="119" cy="203" rx="40" ry="8" fill="#F0E3D4"/>
+    <g id="robot-body-group">
+      <path d="M146.986 124.846C142.073 109.251 92.6717 109.497 87.11 124.846C81.5483 140.196 91.2526 189.61 118.619 187.919C145.985 186.227 151.899 140.442 146.986 124.846Z" fill="#00AAF9" fill-opacity="0.65"/>
+      <ellipse cx="117.586" cy="79.3402" rx="58.587" ry="40.3402" fill="#00AAF9" fill-opacity="0.75"/>
+      <path d="M81.0647 64.1185C78.421 66.6777 74.8726 67.3007 73.1391 65.51C71.4056 63.7194 72.1435 60.1931 74.7871 57.6338C77.4308 55.0746 80.9792 54.4516 82.7127 56.2423C84.4462 58.033 83.7083 61.5593 81.0647 64.1185Z" fill="#FFF3F3" fill-opacity="0.4"/>
+      <path d="M89.2053 55.8113C87.4349 56.6282 85.5522 56.3206 85.0002 55.1242C84.4482 53.9279 85.4359 52.2959 87.2063 51.479C88.9766 50.6622 90.8593 50.9698 91.4113 52.1661C91.9633 53.3624 90.9756 54.9944 89.2053 55.8113Z" fill="#FFF3F3" fill-opacity="0.4"/>
+      <ellipse cx="125" cy="79.5" rx="42" ry="26.5" fill="#2E5CFF"/>
+      <ellipse id="eye-left"  cx="111.259" cy="78.0584" rx="8.1864" ry="11.6385" fill="white"/>
+      <ellipse id="eye-right" cx="146.881" cy="78.0584" rx="7.20009" ry="11.6385" fill="white"/>
+      <path d="M124.412 125.784L111.434 168.642C110.667 171.175 112.563 173.731 115.21 173.731H154.987C156.647 173.731 158.129 172.692 158.696 171.132L175.213 125.627C175.68 124.341 174.728 122.982 173.359 122.982H159.696L158.905 122.2C158.166 121.471 157.17 121.062 156.132 121.062H144.92C143.944 121.062 143.003 121.423 142.278 122.077L141.275 122.982H128.188C126.449 122.982 124.916 124.12 124.412 125.784Z" fill="#FA6225"/>
+      <path d="M134.057 134.938C129.624 125.093 95.5121 133.809 93.9739 140.988C92.4357 148.167 98.0457 160.267 104.922 161.805C111.799 163.343 138.491 144.782 134.057 134.938Z" fill="#00AAF9" fill-opacity="0.75"/>
+      <path d="M169.663 154.004C165.422 154.103 159.899 145.423 161.674 137.927C163.45 130.431 175.088 132.996 178.244 137.927C181.4 142.859 173.904 153.906 169.663 154.004Z" fill="#00AAF9" fill-opacity="0.75"/>
+    </g>
+  </svg>
+</div>
+
+<!-- ─── Options ─── -->
+<div class="options">
+
+  <div class="hint-card">
+    Select a screen (autolayout or frame) or component in the canvas, then run the audit.
+  </div>
+
+  <div class="option-group" id="group-theme">
+    <div class="group-label">Report theme</div>
+    <button class="pill pill-sel"   data-group="theme" data-value="light">Light</button>
+    <button class="pill pill-unsel" data-group="theme" data-value="dark">Dark</button>
+  </div>
+
+  <button class="audit-btn" id="auditBtn">
+    <svg class="refl" width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9.15501 13.51C6.42439 16.1501 2.7593 16.7928 0.968798 14.9455C-0.821707 13.0983 -0.0595973 9.46068 2.67102 6.82064C5.40163 4.18061 9.06673 3.53791 10.8572 5.38514C12.6477 7.23236 11.8856 10.87 9.15501 13.51Z" fill="white" fill-opacity="0.4"/>
+      <path d="M17.5633 4.94057C15.7347 5.78323 13.7901 5.4659 13.22 4.2318C12.6498 2.99769 13.67 1.31414 15.4985 0.471482C17.3271 -0.371179 19.2717 -0.0538509 19.8419 1.18025C20.412 2.41436 19.3919 4.09791 17.5633 4.94057Z" fill="white" fill-opacity="0.4"/>
+    </svg>
+    <span class="btn-label" id="auditLabel">Run Audit</span>
+    <div class="spinner"><div class="spinner-ring"></div></div>
+  </button>
+
+</div>
+
+<script>
+  var state = { theme: 'light' };
+
+  // Report height to plugin so the window fits content exactly — wait for fonts first
+  function sendHeight() {
+    parent.postMessage({ pluginMessage: { type: 'resize', height: document.body.scrollHeight } }, '*');
+  }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(sendHeight);
+  } else {
+    setTimeout(sendHeight, 300);
+  }
+
+  // Pill toggle
+  document.querySelectorAll('.pill').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var group = btn.dataset.group;
+      if (btn.classList.contains('pill-sel')) return; // already selected
+      state[group] = btn.dataset.value;
+      document.querySelectorAll('[data-group="' + group + '"]').forEach(function(b) {
+        b.classList.remove('pill-sel', 'popping');
+        b.classList.add('pill-unsel');
+      });
+      btn.classList.remove('pill-unsel');
+      btn.classList.add('pill-sel');
+      // Trigger pop — remove then re-add on next frame so animation restarts
+      void btn.offsetWidth;
+      btn.classList.add('popping');
+      btn.addEventListener('animationend', function() { btn.classList.remove('popping'); }, { once: true });
+    });
+  });
+
+  // Audit button — starts spinner, plugin sends 'done' when finished
+  var auditBtn = document.getElementById('auditBtn');
+
+  auditBtn.addEventListener('click', function() {
+    if (this.classList.contains('running')) return;
+    this.classList.add('running');
+    parent.postMessage({
+      pluginMessage: { type: 'run', theme: state.theme }
+    }, '*');
+  });
+
+  // Listen for messages from the plugin
+  window.addEventListener('message', function(e) {
+    var msg = e.data && e.data.pluginMessage;
+    if (!msg) return;
+    if (msg.type === 'done') {
+      auditBtn.classList.remove('running');
+      character.classList.remove('auditing');
+    }
+  });
+</script>
+</body>
+</html>
