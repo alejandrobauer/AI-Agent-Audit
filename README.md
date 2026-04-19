@@ -66,7 +66,6 @@ Each issue includes **why it matters for agents** and a **specific fix** with ex
 manifest.json   Plugin metadata and permissions
 code.js         Audit engine + report builder (Figma plugin API)
 ui.html         Plugin UI (vanilla HTML/CSS/JS, no build step)
-icon.png        Plugin icon
 ```
 
 ---
